@@ -6,14 +6,17 @@ reads:
   - 1
   - 2
 ref:
-  fa: /Users/martinscience/Bio/data/ref/hg38.fa
-  gtf: /Users/martinscience/Bio/data/ref/hg38GC28.gtf
-workdir: /Users/martinscience/Bio/work/tuto/wHRNASeq
+  fa: $HG38
+  gtf: $HG38GC28
+  refgen: /fast/users/szyskam_c/static/ref/annotation/
+workdir: $HOME/work/tuto/wHRNASeq
 setup:
   run: PE
   phred: 64
+alignment:
+  threads: 64
 trim:
-  threads: 4
+  threads: 64
   mode: AVGQUAL:20 TRAILING:20 SLIDINGWINDOW:5:25
   file_name:
     - "trim"

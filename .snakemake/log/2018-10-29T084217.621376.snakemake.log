@@ -1,0 +1,9 @@
+PermissionError in line 4 of /fast/users/szyskam_c/snakes/tutorial/hRNASeq/Snakefile:
+[Errno 13] Permission denied: '/Users'
+  File "/fast/users/szyskam_c/snakes/tutorial/hRNASeq/Snakefile", line 4, in <module>
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 210, in makedirs
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 210, in makedirs
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 210, in makedirs
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 210, in makedirs
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 210, in makedirs
+  File "/fast/users/szyskam_c/utils/miniconda/lib/python3.6/os.py", line 220, in makedirs
