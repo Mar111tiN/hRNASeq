@@ -1,0 +1,28 @@
+rule fastqc:
+    input: "fastq/GM{sample}-{read}.fastq"
+    output: "fastQC/GM{sample}-{read}_fastqc.zip"
+    wildcard_constraints:
+        read="\d+"
+    threads: 4
+    run:
+        shell("fastqc {input} -o fastQC/")
+
+rule fastqc_trim: 
+    input:   
+        "fastq_trim/GM{sample}-{read}_trim.fastq",
+        "fastq_trim/GM{sample}-{read}_trim_UP.fastq"
+    output:
+        "fastQC/GM{sample}-{read}_trim_fastqc.zip",
+        "fastQC/GM{sample}-{read}_trim_UP_fastqc.zip"
+    threads: 4
+    run:
+        shell("fastqc {input[0]} {input[1]} -o fastQC/")
+
+rule multiQC:
+    input: expand("fastQC/GM{sample}-{read}_{trim}_fastqc.zip", sample=config["samples"], read=config["reads"], trim=config["trim"]["file_name"]),
+            expand("fastQC/GM{sample}-{read}_fastqc.zip", sample=config["samples"], read=config["reads"])
+    output: "fastQC/multiQC.html"
+    threads: 4
+    shell:
+        "multiqc -f -o fastQC/ -n multiQC ./fastQC/; "
+        "rm fastQC/*_fastqc.{{zip,html}}; "

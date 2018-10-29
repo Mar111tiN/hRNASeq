@@ -1,0 +1,13 @@
+{
+  "type": {
+    "WT": null,
+    "SNF2": null
+  },
+  "repl": [1,2,3,4,5],
+  "FTP": "/fast/users/szyskam_c/static/info/PRJEB5348.txt",
+  "ref": {
+    "fa": "$MYSTATIC/ref/sacCer3.fa",
+    "gtf": "$MYSTATIC/ref/sacCer3.gtf"
+  },
+  "workdir": "/fast/users/szyskam_c/work/tutorial/RNASeqSnake"
+}

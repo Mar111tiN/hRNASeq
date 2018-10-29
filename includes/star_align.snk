@@ -1,0 +1,42 @@
+rule make_ref_genome:
+    output: touch("ref/gen_ref.done")
+    threads: 4
+    params: fa = config["ref"]["fa"],
+            gtf = config["ref"]["gtf"]
+    message: "Genome indexed by STAR"
+    shell:
+        """
+    # generate genome index
+        STAR --runMode genomeGenerate \
+            --genomeDir ref \
+            --genomeFastaFiles {params.fa} \
+            --sjdbGTFfile {params.gtf}\
+            --sjdbOverhang 74 \
+            --runThreadN 4 \
+        """
+
+rule align_fastq:
+    input:  "fastq_trim/GM{sample}-1_trim.fastq",
+            "fastq_trim/GM{sample}-2_trim.fastq",
+            "ref/gen_ref.done"
+    output: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam"
+    threads: 4
+    shell:
+        """
+        FILES=`ls -l fastq_trim | awk '/GM{wildcards.sample}-.*trim.fastq$/ {{ printf("fastq_trim/%s,", $9)}}'`
+        STAR --genomeDir ref \
+        --readFilesIn $FILES\
+        --readFilesCommand cat \
+        --outFileNamePrefix alignment_star/ \
+        --outFilterMultimapNmax 1 \
+        --outReadsUnmapped Fastx \
+        --outSAMtype BAM SortedByCoordinate \
+        --twopassMode Basic \
+        --runThreadN 4
+        """
+
+rule make_indexed_bam:
+    input: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam"
+    threads: 4
+    output: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam.bai"
+    shell: "samtools index {input}"

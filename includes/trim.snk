@@ -1,0 +1,31 @@
+def get_trim_params(wildcards):
+    '''
+    accessory for Trimmomatic
+    retrieves settings from config file and translates into Trimmomatic call
+    '''
+    file = f"GM{wildcards.sample}"
+    run = config["setup"]["run"]
+    threads = config["trim"]["threads"]
+    basein = baseout = file
+    phred = config['setup']['phred']
+    if run == "SE":
+        filein = f"{file}.fastq"
+        fileout = f"{file}.trim.fastq"
+    else:
+        filein = f"fastq/{file}-1.fastq fastq/{file}-2.fastq"
+        fileout = f"fastq_trim/{file}-1_trim.fastq fastq_trim/{file}-1_trim_UP.fastq fastq_trim/{file}-2_trim.fastq fastq_trim/{file}-2_trim_UP.fastq"
+
+    return f"{run} -phred{phred} -threads {threads} -trimlog fastq_trim/trimlog{wildcards.sample} {filein} {fileout} {config['trim']['mode']}"
+
+
+rule trim_fastq:
+    input: "fastq/GM{sample}-1.fastq",
+            "fastq/GM{sample}-2.fastq"
+    output: "fastq_trim/GM{sample}-1_trim.fastq",
+            "fastq_trim/GM{sample}-1_trim_UP.fastq",
+            "fastq_trim/GM{sample}-2_trim.fastq",
+            "fastq_trim/GM{sample}-2_trim_UP.fastq"
+    params: get_trim_params
+    run:
+# for file in get_file_list(fastq_path, '.fastq'):
+        shell("trimmomatic {params}")   

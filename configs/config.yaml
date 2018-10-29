@@ -1,0 +1,20 @@
+samples:
+  1: 
+    - fastq/GM1-1.fastq
+    - fastq/GM1-2.fastq
+reads:
+  - 1
+  - 2
+ref:
+  fa: /Users/martinscience/Bio/data/ref/hg38.fa
+  gtf: /Users/martinscience/Bio/data/ref/hg38GC28.gtf
+workdir: /Users/martinscience/Bio/work/tuto/wHRNASeq
+setup:
+  run: PE
+  phred: 64
+trim:
+  threads: 4
+  mode: AVGQUAL:20 TRAILING:20 SLIDINGWINDOW:5:25
+  file_name:
+    - "trim"
+    - "trim_UP"
