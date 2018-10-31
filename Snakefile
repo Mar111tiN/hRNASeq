@@ -1,16 +1,15 @@
+import os
+
 configfile: "configs/config.yaml"
 # configfile: "configs/config.json"
 
-workdir: config["workdir"]
+include: "includes/helpers.snk"
 
-localrules:
-    make_lists
+workdir: get_env(config["workdir"])
 
 rule all:
     input: "fastQC/multiQC.html",
             expand("alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam.bai", sample=config["samples"], read=config["reads"])
-
-include: "includes/helpers.snk"
 
 include: "includes/trim.snk"
 

@@ -1,25 +1,63 @@
+def alignment_path():
+    '''
+    returns a dict containing the shell-ready versions of the paths for 
+    ref genome :: alignment_path['ref']
+    genome annotation :: alignment_path['annot']
+    tool-specific index genome :: alignment_path[]
+    '''
+    # path is the dict to be returned
+    path = {};
+    # make convenience variable alignment
+    alignment = config['alignment']
+    # make genome_index path from tool  
+    idx_path = f'${{GENIDX}}/{alignment['tool']}/'
+    # --> add path if not existing
+    ref_gen = alignment['refgen'].upper()
+    annotation = alignment['annotation'].upper()
+    annotation = annotation.replace('GENECODE', 'GC').replace('ENSEMBLE', 'EN')
+    # load dict with paths
+    path['ref'] = f'${ref_gen}'
+    path['annot'] = f'${annotation}'
+    path['idx'] = f'{idx_path}/{annotation.lower()}/'
+    return path
+
+
+def get_star_options():
+    overhang = config['setup']['readlength'] - 1
+    threads = config['alignment']['threads']
+    options = " --runMode genomeGenerate"
+    options += f" --genomeDir {alignment_path['idx']}"
+    options += f" --genomeFastaFiles {alignment_path['ref']}"
+    options += f" --sjdbGTFfile {alignment_path['annot']}"
+    options += f" --sjdbOverhang {overhang}"
+    options += f" --runThreadN {threads}"
+    return options
+
+
 rule make_ref_genome:
-    output: touch("ref/gen_ref.done")
+    output: touch('/fast/users/szyskam_c/static/ref/annotation/hg38gc28/gen_ref.done')
     threads: config['alignment']['threads']
-    params: fa = config["ref"]["fa"],
-            gtf = config["ref"]["gtf"],
+    params: fa = get_env(config["ref"]["fa"]),
+            gtf = get_env(config["ref"]["gtf"]),
             ref = config['ref']['refgen']
     message: "Genome indexed by STAR"
-    shell:
-        """
-    # generate genome index
-        STAR --runMode genomeGenerate \
-            --genomeDir {params.ref} \
-            --genomeFastaFiles {params.fa} \
-            --sjdbGTFfile {params.gtf}\
-            --sjdbOverhang 74 \
-            --runThreadN {threads} \
-        """
+    run:
+        shell(f'STAR {get_star_options()}')
+    # shell:
+    #     """
+    # # generate genome index
+    #     STAR --runMode genomeGenerate \
+    #         --genomeDir {params.ref} \
+    #         --genomeFastaFiles {params.fa} \
+    #         --sjdbGTFfile {params.gtf}\
+    #         --sjdbOverhang 74 \
+    #         --runThreadN {threads} \
+    #     """
 
 rule align_fastq:
     input:  "fastq_trim/GM{sample}-1_trim.fastq",
             "fastq_trim/GM{sample}-2_trim.fastq",
-            "ref/gen_ref.done"
+            "/fast/users/szyskam_c/static/ref/annotation/hg38gc28/gen_ref.done"
     output: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam"
     params: fa = config["ref"]["fa"],
             gtf = config["ref"]["gtf"],
@@ -27,11 +65,11 @@ rule align_fastq:
     threads: config['alignment']['threads']
     shell:
         """
-        FILES=`ls -l fastq_trim | awk '/GM{wildcards.sample}-.*trim.fastq$/ {{ printf("fastq_trim/%s,", $9)}}'`
+        # for gz files include --readFilesCommand gzip -c
+        FILES=`ls -l fastq_trim | awk '/GM{wildcards.sample}-.*trim.fastq$/ {{ printf("fastq_trim/%s ", $9)}}'`
         STAR --genomeDir {params.ref} \
         --readFilesIn $FILES\
-        --readFilesCommand cat \
-        --outFileNamePrefix alignment_star/ \
+        --outFileNamePrefix alignment_star/GM{wildcards.sample}- \
         --outFilterMultimapNmax 1 \
         --outReadsUnmapped Fastx \
         --outSAMtype BAM SortedByCoordinate \
@@ -41,6 +79,6 @@ rule align_fastq:
 
 rule make_indexed_bam:
     input: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam"
-    threads: (config['alignment']['threads'] / 4)
+    threads: config['alignment']['threads']
     output: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam.bai"
     shell: "samtools index {input}"

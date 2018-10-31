@@ -7,6 +7,7 @@ def get_trim_params(wildcards):
     run = config["setup"]["run"]
     threads = config["trim"]["threads"]
     basein = baseout = file
+
     phred = config['setup']['phred']
     if run == "SE":
         filein = f"{file}.fastq"
@@ -19,8 +20,8 @@ def get_trim_params(wildcards):
 
 
 rule trim_fastq:
-    input: "fastq/GM{sample}-1.fastq",
-            "fastq/GM{sample}-2.fastq"
+    input: "/fast/users/szyskam_c/work/tutorial/whRNASeq/fastq/GM{sample}-1.fastq",
+            "/fast/users/szyskam_c/work/tutorial/whRNASeq/fastq/GM{sample}-2.fastq"
     output: "fastq_trim/GM{sample}-1_trim.fastq",
             "fastq_trim/GM{sample}-1_trim_UP.fastq",
             "fastq_trim/GM{sample}-2_trim.fastq",
@@ -29,3 +30,4 @@ rule trim_fastq:
     run:
 # for file in get_file_list(fastq_path, '.fastq'):
         shell("trimmomatic {params}")   
+
