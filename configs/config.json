@@ -1,13 +1,36 @@
 {
-  "type": {
-    "WT": null,
-    "SNF2": null
+  "samples": [
+    {
+      "1": [
+        "fastq/GM1-1.fastq",
+        "fastq/GM1-2.fastq"
+      ]
+    }
+  ],
+  "reads": [
+    1,
+    2
+  ],
+  "workdir": "/fast/users/szyskam_c/work/tutorial/whRNASeq",
+  "setup": {
+    "run": "PE",
+    "phred": 64,
+    "readlength": 75,
+    "fastq_comp": "gz"
   },
-  "repl": [1,2,3,4,5],
-  "FTP": "/fast/users/szyskam_c/static/info/PRJEB5348.txt",
-  "ref": {
-    "fa": "$MYSTATIC/ref/sacCer3.fa",
-    "gtf": "$MYSTATIC/ref/sacCer3.gtf"
+  "alignment": {
+    "tool": "STAR",
+    "threads": 16,
+    "annotation": "GENCODE28",
+    "refgen": "HG38"
   },
-  "workdir": "/fast/users/szyskam_c/work/tutorial/RNASeqSnake"
+  "trim": {
+    "use_trim": true,
+    "threads": 64,
+    "mode": "AVGQUAL:20 SLIDINGWINDOW:5:25",
+    "file_name": [
+      "trim",
+      "trim_UP"
+    ]
+  }
 }

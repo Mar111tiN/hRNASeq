@@ -20,12 +20,8 @@ def get_trim_params(wildcards):
 
 
 rule trim_fastq:
-    input: "/fast/users/szyskam_c/work/tutorial/whRNASeq/fastq/GM{sample}-1.fastq",
-            "/fast/users/szyskam_c/work/tutorial/whRNASeq/fastq/GM{sample}-2.fastq"
-    output: "fastq_trim/GM{sample}-1_trim.fastq",
-            "fastq_trim/GM{sample}-1_trim_UP.fastq",
-            "fastq_trim/GM{sample}-2_trim.fastq",
-            "fastq_trim/GM{sample}-2_trim_UP.fastq"
+    input: expand("/fast/users/szyskam_c/work/tutorial/whRNASeq/fastq/GM{{sample}}-{read}.fastq", read=config['reads'])
+    output: expand("fastq_trim/GM{{sample}}-{read}_{trim}.fastq", read=config['reads'], trim=['trim', 'trim_UP'])
     params: get_trim_params
     run:
 # for file in get_file_list(fastq_path, '.fastq'):

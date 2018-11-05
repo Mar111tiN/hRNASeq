@@ -5,21 +5,21 @@ samples:
 reads:
   - 1
   - 2
-ref: 
-  refgen: /fast/users/szyskam_c/static/ref/annotation/hg38gc28
-workdir: fullWRKDIR
+workdir: /fast/users/szyskam_c/work/tutorial/whRNASeq
 setup:
   run: PE
   phred: 64
   readlength: 75
+  fastq_comp: ''
 alignment:
-  tool: "STAR"
+  tool: STAR
   threads: 16
-  annotation: "GENCODE28"
+  annotation: GENCODE28
   refgen: HG38
 trim:
+  use_trim: True
   threads: 64
   mode: AVGQUAL:20 SLIDINGWINDOW:5:25
   file_name:
-    - "trim"
-    - "trim_UP"
+    - trim
+    - trim_UP

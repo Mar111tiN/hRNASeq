@@ -5,11 +5,12 @@ configfile: "configs/config.yaml"
 
 include: "includes/helpers.snk"
 
-workdir: get_env(config["workdir"])
+workdir: config["workdir"]
 
 rule all:
     input: "fastQC/multiQC.html",
-            expand("alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam.bai", sample=config["samples"], read=config["reads"])
+            expand("alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam.bai",
+                sample=config["samples"], read=config["reads"])
 
 include: "includes/trim.snk"
 

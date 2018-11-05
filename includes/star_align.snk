@@ -1,28 +1,35 @@
+import os
+
 def alignment_path():
     '''
     returns a dict containing the shell-ready versions of the paths for 
     ref genome :: alignment_path['ref']
     genome annotation :: alignment_path['annot']
-    tool-specific index genome :: alignment_path[]
+    tool-annotation-specific index genome :: alignment_path['idx']
     '''
     # path is the dict to be returned
     path = {};
     # make convenience variable alignment
     alignment = config['alignment']
-    # make genome_index path from tool  
-    idx_path = f'${{GENIDX}}/{alignment['tool']}/'
-    # --> add path if not existing
     ref_gen = alignment['refgen'].upper()
-    annotation = alignment['annotation'].upper()
-    annotation = annotation.replace('GENECODE', 'GC').replace('ENSEMBLE', 'EN')
+    annotation = ref_gen + alignment['annotation'].upper()
+    # convert HGxxGENCODE/ENSEMBLEyy to HG..GC/ENyy
+    annotation = annotation.replace('GENCODE', 'GC').replace('ENSEMBLE', 'EN')
+    # make genome_index path from $GENIDX and config:alignment:tool  
+    idx_path = os.path.join(os.environ['GENIDX'], alignment['tool'])
+    idx_path = f'{idx_path}/{annotation.lower()}'
+    # add path if not existing
+    if not os.path.isdir(idx_path):
+        os.makedirs(idx_path)
     # load dict with paths
-    path['ref'] = f'${ref_gen}'
-    path['annot'] = f'${annotation}'
-    path['idx'] = f'{idx_path}/{annotation.lower()}/'
+    path['ref'] = os.environ[ref_gen]
+    path['annot'] = os.environ[annotation]
+    path['idx'] = idx_path
     return path
 
+alignment_path = alignment_path()
 
-def get_star_options():
+def get_star_genomeGenerate_options():
     overhang = config['setup']['readlength'] - 1
     threads = config['alignment']['threads']
     options = " --runMode genomeGenerate"
@@ -34,15 +41,14 @@ def get_star_options():
     return options
 
 
-rule make_ref_genome:
-    output: touch('/fast/users/szyskam_c/static/ref/annotation/hg38gc28/gen_ref.done')
+rule make_ref_genome: 
+    # --> automatize gen_ref.done file creating ...f"{alignment_path['idx']}gen_ref.done"
+    output: touch("/fast/users/szyskam_c/static/ref/annotation/hg38gc28/gen_ref.done")
     threads: config['alignment']['threads']
-    params: fa = get_env(config["ref"]["fa"]),
-            gtf = get_env(config["ref"]["gtf"]),
-            ref = config['ref']['refgen']
+    params: get_star_genomeGenerate_options()
     message: "Genome indexed by STAR"
     run:
-        shell(f'STAR {get_star_options()}')
+        shell(f'STAR {params}')
     # shell:
     #     """
     # # generate genome index
@@ -54,27 +60,34 @@ rule make_ref_genome:
     #         --runThreadN {threads} \
     #     """
 
+
+def get_star_options(wildcards):
+    threads = config['alignment']['threads']
+    options = f"--genomeDir {alignment_path['idx']}"
+    options += " --readFilesIn $FILES"
+    options += f' --outFileNamePrefix alignment_star/GM{wildcards.sample}-'
+    options += f" --outFilterMultimapNmax 1"
+    options += f" --outReadsUnmapped Fastx"
+    if config['setup']['fastq_comp'] == 'gz':
+        options += " --readFilesCommand gzip -c"
+    elif config['setup']['fastq_comp'] == 'bz2':
+        options += " --readFilesCommand bunzip2 -c"
+    options += f" --outSAMtype BAM SortedByCoordinate"
+    options += " --twopassMode Basic"
+    options += f" --runThreadN {threads}"    
+    return options
+
+
 rule align_fastq:
-    input:  "fastq_trim/GM{sample}-1_trim.fastq",
-            "fastq_trim/GM{sample}-2_trim.fastq",
+    input:  expand("fastq_trim/GM{{sample}}-{read}_trim.fastq", read=[1,2]),
             "/fast/users/szyskam_c/static/ref/annotation/hg38gc28/gen_ref.done"
     output: "alignment_star/GM{sample}-Aligned.sortedByCoord.out.bam"
-    params: fa = config["ref"]["fa"],
-            gtf = config["ref"]["gtf"],
-            ref = config['ref']['refgen']
+    params: get_star_options
     threads: config['alignment']['threads']
     shell:
         """
-        # for gz files include --readFilesCommand gzip -c
         FILES=`ls -l fastq_trim | awk '/GM{wildcards.sample}-.*trim.fastq$/ {{ printf("fastq_trim/%s ", $9)}}'`
-        STAR --genomeDir {params.ref} \
-        --readFilesIn $FILES\
-        --outFileNamePrefix alignment_star/GM{wildcards.sample}- \
-        --outFilterMultimapNmax 1 \
-        --outReadsUnmapped Fastx \
-        --outSAMtype BAM SortedByCoordinate \
-        --twopassMode Basic \
-        --runThreadN {threads}
+        STAR {params}
         """
 
 rule make_indexed_bam:

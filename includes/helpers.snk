@@ -1,11 +1,2 @@
 def get_file_list(path, pattern):
     return [os.path.join(path,file) for file in os.listdir(path) if pattern in file]
-    
-
-def get_env(ENVNAME):
-    '''
-    retrieves environment variables defined in config-file
-    '''
-    if ENVNAME[0] == '$':
-        ENVNAME = ENVNAME[1:]
-    return os.environ[ENVNAME]
