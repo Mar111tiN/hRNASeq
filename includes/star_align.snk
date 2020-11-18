@@ -12,12 +12,12 @@ def alignment_path():
     # make convenience variable alignment
     alignment = config['alignment']
     ref_gen = alignment['refgen'].upper()
-    annotation = ref_gen + alignment['annotation'].upper()
     # convert HGxxGENCODE/ENSEMBLEyy to HG..GC/ENyy
-    annotation = annotation.replace('GENCODE', 'GC').replace('ENSEMBLE', 'EN')
+    annotation = alignment['annotation'].upper().replace('GENCODE', 'GC').replace('ENSEMBLE', 'EN')
+    idx_path = ref_gen + alignment
     # make genome_index path from $GENIDX and config:alignment:tool  
     idx_path = os.path.join(os.environ['GENIDX'], alignment['tool'])
-    idx_path = f'{idx_path}/{annotation.lower()}'
+    idx_path = f'{idx_path}/{idx_path.lower()}'
     # add path if not existing
     if not os.path.isdir(idx_path):
         os.makedirs(idx_path)
